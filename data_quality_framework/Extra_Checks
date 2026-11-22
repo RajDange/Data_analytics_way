@@ -1,9 +1,57 @@
-for r in spark.table(T_CATALOG).filter("is_active = true").orderBy("rule_id").collect():
-    try:
-        base = spark.sql(r.base_sql)
-        fail = base.filter(r.failure_condition) if r.failure_condition else spark.sql(r.failure_sql)
-        print(f"Rule {r.rule_id} {r.rule_name}")
-        print(f"   base rows={base.count():>9}   base distinct keys={base.select('record_key').distinct().count():>9}")
-        print(f"   fail rows={fail.count():>9}   fail distinct keys={fail.select('record_key').distinct().count():>9}")
-    except Exception as e:
-        print(f"Rule {r.rule_id} ERROR: {str(e)[:200]}")
+-- ===== Base =====
+Total Records  = SUM ( dq_rule_run_log[total_count] )
+Failed Records = SUM ( dq_rule_run_log[failed_count] )
+Passed Records = SUM ( dq_rule_run_log[passed_count] )
+Pass Rate %    = DIVIDE ( [Passed Records], [Total Records] )          -- definition A
+
+Pass Rate % (Rule Avg) =                                                -- definition B
+    AVERAGEX ( VALUES ( dq_rule_catalog[rule_id] ), [Pass Rate %] )
+
+-- ===== Latest run (for KPI cards, ignores the date slicer) =====
+Latest Run Date =
+    CALCULATE ( MAX ( dq_rule_run_log[run_date] ), REMOVEFILTERS ( dim_date ) )
+
+Pass Rate % (Latest) =
+    VAR d = [Latest Run Date]
+    RETURN CALCULATE ( [Pass Rate %], REMOVEFILTERS ( dim_date ), dq_rule_run_log[run_date] = d )
+
+Failed Records (Latest) =
+    VAR d = [Latest Run Date]
+    RETURN CALCULATE ( [Failed Records], REMOVEFILTERS ( dim_date ), dq_rule_run_log[run_date] = d )
+
+Total Records (Latest) =
+    VAR d = [Latest Run Date]
+    RETURN CALCULATE ( [Total Records], REMOVEFILTERS ( dim_date ), dq_rule_run_log[run_date] = d )
+
+-- ===== Change vs previous run =====
+Previous Run Date =
+    VAR d = [Latest Run Date]
+    RETURN CALCULATE ( MAX ( dq_rule_run_log[run_date] ), REMOVEFILTERS ( dim_date ),
+                       dq_rule_run_log[run_date] < d )
+
+Pass Rate % (Previous) =
+    VAR p = [Previous Run Date]
+    RETURN CALCULATE ( [Pass Rate %], REMOVEFILTERS ( dim_date ), dq_rule_run_log[run_date] = p )
+
+Pass Rate Change (pp) = ( [Pass Rate % (Latest)] - [Pass Rate % (Previous)] ) * 100
+
+-- ===== Run health =====
+Rules Executed (Latest) =
+    VAR d = [Latest Run Date]
+    RETURN CALCULATE ( COUNTROWS ( dq_rule_run_log ), REMOVEFILTERS ( dim_date ),
+                       dq_rule_run_log[run_date] = d )
+
+Rules Errored (Latest) =
+    VAR d = [Latest Run Date]
+    RETURN CALCULATE ( COUNTROWS ( dq_rule_run_log ), REMOVEFILTERS ( dim_date ),
+                       dq_rule_run_log[run_date] = d, dq_rule_run_log[status] = "FAILED" )
+
+Last Run Status =
+    VAR lastRun = CALCULATE ( MAX ( dq_run[start_ts] ), REMOVEFILTERS ( dq_run ) )
+    RETURN CALCULATE ( MAX ( dq_run[status] ), REMOVEFILTERS ( dq_run ), dq_run[start_ts] = lastRun )
+
+-- ===== Current worklist =====
+Failing Records (Current) = COUNTROWS ( dq_failed_records_current )
+Avg Days Failing          = AVERAGE ( dq_failed_records_current[days_failing] )
+Records Failing > 30 Days =
+    CALCULATE ( COUNTROWS ( dq_failed_records_current ), dq_failed_records_current[days_failing] > 30 )
