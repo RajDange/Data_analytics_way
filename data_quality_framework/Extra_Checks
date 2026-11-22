@@ -1,0 +1,9 @@
+for r in spark.table(T_CATALOG).filter("is_active = true").orderBy("rule_id").collect():
+    try:
+        base = spark.sql(r.base_sql)
+        fail = base.filter(r.failure_condition) if r.failure_condition else spark.sql(r.failure_sql)
+        print(f"Rule {r.rule_id} {r.rule_name}")
+        print(f"   base rows={base.count():>9}   base distinct keys={base.select('record_key').distinct().count():>9}")
+        print(f"   fail rows={fail.count():>9}   fail distinct keys={fail.select('record_key').distinct().count():>9}")
+    except Exception as e:
+        print(f"Rule {r.rule_id} ERROR: {str(e)[:200]}")
