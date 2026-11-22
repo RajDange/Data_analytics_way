@@ -1,27 +1,36 @@
--- ===== Base =====
-Total Records  = SUM ( dq_rule_run_log[total_count] )
-Failed Records = SUM ( dq_rule_run_log[failed_count] )
-Passed Records = SUM ( dq_rule_run_log[passed_count] )
-Pass Rate %    = DIVIDE ( [Passed Records], [Total Records] )          -- definition A
+-- ===== Base (OU-aware) =====
+Total Records =
+    IF ( ISCROSSFILTERED ( dim_operating_unit ),
+         SUM ( dq_rule_run_log_ou[total_count] ),
+         SUM ( dq_rule_run_log[total_count] ) )
 
-Pass Rate % (Rule Avg) =                                                -- definition B
-    AVERAGEX ( VALUES ( dq_rule_catalog[rule_id] ), [Pass Rate %] )
+Failed Records =
+    IF ( ISCROSSFILTERED ( dim_operating_unit ),
+         SUM ( dq_rule_run_log_ou[failed_count] ),
+         SUM ( dq_rule_run_log[failed_count] ) )
 
--- ===== Latest run (for KPI cards, ignores the date slicer) =====
+Passed Records = [Total Records] - [Failed Records]
+
+DQ Score % = DIVIDE ( [Passed Records], [Total Records] )
+
+DQ Score % (Rule Avg) =
+    AVERAGEX ( VALUES ( dq_rule_catalog[rule_id] ), [DQ Score %] )
+
+-- ===== Latest run (cards; ignore the date slicer) =====
 Latest Run Date =
     CALCULATE ( MAX ( dq_rule_run_log[run_date] ), REMOVEFILTERS ( dim_date ) )
 
-Pass Rate % (Latest) =
+DQ Score % (Latest) =
     VAR d = [Latest Run Date]
-    RETURN CALCULATE ( [Pass Rate %], REMOVEFILTERS ( dim_date ), dq_rule_run_log[run_date] = d )
-
-Failed Records (Latest) =
-    VAR d = [Latest Run Date]
-    RETURN CALCULATE ( [Failed Records], REMOVEFILTERS ( dim_date ), dq_rule_run_log[run_date] = d )
+    RETURN CALCULATE ( [DQ Score %], REMOVEFILTERS ( dim_date ), dim_date[date] = d )
 
 Total Records (Latest) =
     VAR d = [Latest Run Date]
-    RETURN CALCULATE ( [Total Records], REMOVEFILTERS ( dim_date ), dq_rule_run_log[run_date] = d )
+    RETURN CALCULATE ( [Total Records], REMOVEFILTERS ( dim_date ), dim_date[date] = d )
+
+Failed Records (Latest) =
+    VAR d = [Latest Run Date]
+    RETURN CALCULATE ( [Failed Records], REMOVEFILTERS ( dim_date ), dim_date[date] = d )
 
 -- ===== Change vs previous run =====
 Previous Run Date =
@@ -29,29 +38,37 @@ Previous Run Date =
     RETURN CALCULATE ( MAX ( dq_rule_run_log[run_date] ), REMOVEFILTERS ( dim_date ),
                        dq_rule_run_log[run_date] < d )
 
-Pass Rate % (Previous) =
+DQ Score % (Previous) =
     VAR p = [Previous Run Date]
-    RETURN CALCULATE ( [Pass Rate %], REMOVEFILTERS ( dim_date ), dq_rule_run_log[run_date] = p )
+    RETURN CALCULATE ( [DQ Score %], REMOVEFILTERS ( dim_date ), dim_date[date] = p )
 
-Pass Rate Change (pp) = ( [Pass Rate % (Latest)] - [Pass Rate % (Previous)] ) * 100
+DQ Score Change (pp) = ( [DQ Score % (Latest)] - [DQ Score % (Previous)] ) * 100
 
--- ===== Run health =====
-Rules Executed (Latest) =
-    VAR d = [Latest Run Date]
-    RETURN CALCULATE ( COUNTROWS ( dq_rule_run_log ), REMOVEFILTERS ( dim_date ),
-                       dq_rule_run_log[run_date] = d )
+-- ===== Run health / audit =====
+Rules Executed =
+    COUNTROWS ( dq_rule_run_log )
+
+Rules Errored =
+    CALCULATE ( COUNTROWS ( dq_rule_run_log ), dq_rule_run_log[status] = "FAILED" )
 
 Rules Errored (Latest) =
     VAR d = [Latest Run Date]
-    RETURN CALCULATE ( COUNTROWS ( dq_rule_run_log ), REMOVEFILTERS ( dim_date ),
-                       dq_rule_run_log[run_date] = d, dq_rule_run_log[status] = "FAILED" )
+    RETURN CALCULATE ( [Rules Errored], REMOVEFILTERS ( dim_date ), dim_date[date] = d )
 
 Last Run Status =
-    VAR lastRun = CALCULATE ( MAX ( dq_run[start_ts] ), REMOVEFILTERS ( dq_run ) )
-    RETURN CALCULATE ( MAX ( dq_run[status] ), REMOVEFILTERS ( dq_run ), dq_run[start_ts] = lastRun )
+    VAR lastStart = CALCULATE ( MAX ( dq_run[start_ts] ), REMOVEFILTERS () )
+    RETURN CALCULATE ( MAX ( dq_run[status] ), REMOVEFILTERS (), dq_run[start_ts] = lastStart )
 
--- ===== Current worklist =====
-Failing Records (Current) = COUNTROWS ( dq_failed_records_current )
-Avg Days Failing          = AVERAGE ( dq_failed_records_current[days_failing] )
+Last Run Time =
+    CALCULATE ( MAX ( dq_run[end_ts] ), REMOVEFILTERS () )
+
+-- ===== Current worklist (distinct records: a record can have several rows, one per OU/site) =====
+Failing Records (Current) =
+    COUNTROWS ( SUMMARIZE ( dq_failed_records_current,
+                            dq_failed_records_current[rule_id],
+                            dq_failed_records_current[record_key] ) )
+
 Records Failing > 30 Days =
-    CALCULATE ( COUNTROWS ( dq_failed_records_current ), dq_failed_records_current[days_failing] > 30 )
+    COUNTROWS ( SUMMARIZE (
+        FILTER ( dq_failed_records_current, dq_failed_records_current[days_failing] > 30 ),
+        dq_failed_records_current[rule_id], dq_failed_records_current[record_key] ) )
