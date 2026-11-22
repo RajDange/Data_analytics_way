@@ -24,6 +24,10 @@ DQ rules are stored in a catalog table and run by one generic notebook. The resu
 | `dq_failed_records_history` | append (partitioned by `run_date`) | Failing keys of every run |
 | `dq_failed_records_current` | overwrite | Failing keys of the latest run, with `first_failed_date` and `days_failing` |
 | `dim_date` | static | Date dimension 2024–2030 |
+| `dq_rule_run_log_ou` | append | Per rule, per run, **per operating unit** (`org_id`): total, failed, passed, pass rate |
+| `dq_customer_ou_map` | rebuilt each run | Customer → **every** OU where the account has a site (from `hz_cust_acct_sites_all`) |
+| `dq_ou_region_map` | maintained manually | `org_id` → region / country |
+| `dim_operating_unit` | rebuilt each run | OU dimension: `org_id`, OU name, region, country (`-1` = Unassigned) |
 
 ## Rule contract
 
@@ -31,6 +35,11 @@ DQ rules are stored in a catalog table and run by one generic notebook. The resu
 - `failure_condition` is a filter applied to `base_sql`, for simple rules.
 - `failure_sql` is a full query that returns the failing `record_key`s. It is used for complex rules (duplicates, cross-table checks) when `failure_condition` is NULL.
 - All SQL is Spark SQL. Source tables are referenced as `{SRC}.table_name`.
+- **Operating unit:** customer-level rules (`entity_grain = 'CUSTOMER'`) are assigned automatically to every OU where the customer has a site. Other rules must return an `org_id` column. If no OU is found, the rule gets `-1` (Unassigned).
+- **Record attributes (optional):** if the failing rows contain `account_number`, `party_number`, `cust_account_id` or `cust_acct_site_id`, these are stored in the failed-records tables for record-level filtering.
+
+### Counting across operating units
+Overall counts (`dq_rule_run_log`) count each record once. Per-OU counts (`dq_rule_run_log_ou`) count a customer in **each** OU where it has a site, so the per-OU totals summed across OUs can be higher than the overall total. The semantic model uses the overall table when no OU filter is applied, and the per-OU table when one is.
 
 ## Setup
 
