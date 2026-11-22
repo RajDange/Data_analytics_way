@@ -1,0 +1,78 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.0.0/schema.json",
+  "name": "3d18c8e78ea723e436cd",
+  "position": {
+    "x": 644,
+    "y": 128,
+    "z": 202,
+    "width": 616,
+    "height": 92,
+    "tabOrder": 202
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Download full lists – one CSV per rule (SharePoint)",
+                    "textStyle": {
+                      "fontSize": "12pt",
+                      "color": "#1D4ED8",
+                      "fontWeight": "bold"
+                    },
+                    "url": "https://YOUR-TENANT.sharepoint.com/sites/YOUR-SITE/Shared%20Documents/DQ%20Exports"
+                  },
+                  {
+                    "value": "   Files list every row a rule's query returns; counts here are distinct records.",
+                    "textStyle": {
+                      "fontSize": "9pt",
+                      "color": "#4B5563"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#FFFFFF'"
+                    }
+                  }
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

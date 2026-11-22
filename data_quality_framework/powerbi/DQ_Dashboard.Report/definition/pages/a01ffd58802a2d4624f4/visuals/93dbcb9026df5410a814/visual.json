@@ -1,0 +1,318 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.0.0/schema.json",
+  "name": "93dbcb9026df5410a814",
+  "position": {
+    "x": 20,
+    "y": 232,
+    "z": 202,
+    "width": 1240,
+    "height": 472,
+    "tabOrder": 202
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_rule_run_log"
+                    }
+                  },
+                  "Property": "run_date"
+                }
+              },
+              "queryRef": "dq_rule_run_log.run_date",
+              "nativeQueryRef": "run_date"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_rule_run_log"
+                    }
+                  },
+                  "Property": "rule_id"
+                }
+              },
+              "queryRef": "dq_rule_run_log.rule_id",
+              "nativeQueryRef": "rule_id"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_rule_catalog"
+                    }
+                  },
+                  "Property": "rule_name"
+                }
+              },
+              "queryRef": "dq_rule_catalog.rule_name",
+              "nativeQueryRef": "rule_name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_rule_catalog"
+                    }
+                  },
+                  "Property": "rule_description"
+                }
+              },
+              "queryRef": "dq_rule_catalog.rule_description",
+              "nativeQueryRef": "rule_description"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_rule_catalog"
+                    }
+                  },
+                  "Property": "dimension_name"
+                }
+              },
+              "queryRef": "dq_rule_catalog.dimension_name",
+              "nativeQueryRef": "dimension_name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_rule_run_log"
+                    }
+                  },
+                  "Property": "rule_version"
+                }
+              },
+              "queryRef": "dq_rule_run_log.rule_version",
+              "nativeQueryRef": "rule_version"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_rule_run_log"
+                    }
+                  },
+                  "Property": "status"
+                }
+              },
+              "queryRef": "dq_rule_run_log.status",
+              "nativeQueryRef": "status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_rule_run_log"
+                    }
+                  },
+                  "Property": "total_count"
+                }
+              },
+              "queryRef": "dq_rule_run_log.total_count",
+              "nativeQueryRef": "total_count"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_rule_run_log"
+                    }
+                  },
+                  "Property": "failed_count"
+                }
+              },
+              "queryRef": "dq_rule_run_log.failed_count",
+              "nativeQueryRef": "failed_count"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_rule_run_log"
+                    }
+                  },
+                  "Property": "pass_rate"
+                }
+              },
+              "queryRef": "dq_rule_run_log.pass_rate",
+              "nativeQueryRef": "pass_rate"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_rule_run_log"
+                    }
+                  },
+                  "Property": "duration_sec"
+                }
+              },
+              "queryRef": "dq_rule_run_log.duration_sec",
+              "nativeQueryRef": "duration_sec"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dq_rule_run_log"
+                    }
+                  },
+                  "Property": "error_message"
+                }
+              },
+              "queryRef": "dq_rule_run_log.error_message",
+              "nativeQueryRef": "error_message"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "dq_rule_run_log"
+                  }
+                },
+                "Property": "run_date"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": false
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Rule run log'"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "11D"
+                }
+              }
+            },
+            "bold": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#1B2430'"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#FFFFFF'"
+                    }
+                  }
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "border": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#E1E5EB'"
+                    }
+                  }
+                }
+              }
+            },
+            "radius": {
+              "expr": {
+                "Literal": {
+                  "Value": "8D"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/1.0.0/schema.json",
+  "name": "fbe4f7cf5c5cb3fbfe01",
+  "position": {
+    "x": 1082,
+    "y": 454,
+    "z": 303,
+    "width": 178,
+    "height": 120,
+    "tabOrder": 303
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Open failed-record files (SharePoint)",
+                    "textStyle": {
+                      "fontSize": "11pt",
+                      "color": "#1D4ED8",
+                      "fontWeight": "bold"
+                    },
+                    "url": "https://YOUR-TENANT.sharepoint.com/sites/YOUR-SITE/Shared%20Documents/DQ%20Exports"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#FFFFFF'"
+                    }
+                  }
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
