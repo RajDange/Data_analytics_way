@@ -28,6 +28,7 @@ DQ rules are stored in a catalog table and run by one generic notebook. The resu
 | `dq_customer_ou_map` | rebuilt each run | Customer → **every** OU where the account has a site (from `hz_cust_acct_sites_all`) |
 | `dq_ou_region_map` | maintained manually | `org_id` → region / country |
 | `dim_operating_unit` | rebuilt each run | OU dimension: `org_id`, OU name, region, country (`-1` = Unassigned) |
+| `dq_export_files` | overwritten by `04_dq_export` | One row per rule: CSV file name, **SharePoint link** (`file_url`), row count, export time, status |
 
 ## Rule contract
 
@@ -61,3 +62,4 @@ The Copy data activity is configured as follows:
 - The Power BI report links to the **SharePoint folder**. File names are the same on every run (`DQ_Rule_<id>_<rule_name>.csv`), so SharePoint stores each day as a new version of each file.
 - Files for deactivated or renamed rules are removed from the Lakehouse, but **not** from SharePoint. Clean up that folder occasionally.
 - File row counts are the rows a rule's query returns. Dashboard counts are distinct records (`record_key`), so the two can differ.
+- Set `SHAREPOINT_FOLDER_URL` in `00_dq_config` to the SharePoint folder the Copy activity writes to. `04_dq_export` builds each rule's link from it (`dq_export_files.file_url`). In the semantic model, relate `dq_rule_catalog[rule_id]` 1→1 `dq_export_files[rule_id]` and set `file_url` to Data category = Web URL.
