@@ -11,6 +11,7 @@ DQ rules are stored in a catalog table and run by one generic notebook. The resu
 | `01_dq_setup` | Creates the `dq` schema and all DQ tables, seeds DQ dimensions, builds `dim_date` | Once (safe to re-run) |
 | `02_dq_rule_onboarding` | Defines rules and MERGEs them into `dq_rule_catalog` (versioned) | Whenever rules are added or changed |
 | `03_dq_runner` | Runs all active rules, writes the run log and failed records | Scheduled, after the EBS load |
+| `05_dq_export_tables` | For each active rule, writes the full population (`base_sql`, all columns) with a `dq_status` = VALID / INVALID flag to `Exports.dq_rule_<id>` (overwritten each run), plus a summary in `Exports.export_table_log` | In the pipeline, after `03_dq_runner` (in parallel with `04`) |
 | `04_dq_export` | Writes one CSV per active rule with the full output of its failure query (all columns, no DISTINCT) to `Files/dq_exports/latest/`, plus a dated archive folder | In the pipeline, after `03_dq_runner` |
 
 ## Tables (`Customer_MDM_PoC.dq`)
@@ -53,7 +54,8 @@ Overall counts (`dq_rule_run_log`) count each record once. Per-OU counts (`dq_ru
 ## Daily pipeline (`pl_dq_daily`)
 
 ```
-[Notebook] 03_dq_runner  --on success-->  [Notebook] 04_dq_export  --on success-->  [Copy data] CSV -> SharePoint
+[Notebook] 03_dq_runner --on success--> [Notebook] 04_dq_export --on success--> [Copy data] CSV -> SharePoint
+                        \-on success--> [Notebook] 05_dq_export_tables   (Exports schema tables)
 ```
 
 The Copy data activity is configured as follows:
@@ -63,3 +65,16 @@ The Copy data activity is configured as follows:
 - Files for deactivated or renamed rules are removed from the Lakehouse, but **not** from SharePoint. Clean up that folder occasionally.
 - File row counts are the rows a rule's query returns. Dashboard counts are distinct records (`record_key`), so the two can differ.
 - Set `SHAREPOINT_FOLDER_URL` in `00_dq_config` to the SharePoint folder the Copy activity writes to. `04_dq_export` builds each rule's link from it (`dq_export_files.file_url`). In the semantic model, relate `dq_rule_catalog[rule_id]` 1→1 `dq_export_files[rule_id]` and set `file_url` to Data category = Web URL.
+
+## Export tables (`Customer_MDM_PoC.Exports`)
+
+| Table | Content |
+|---|---|
+| `dq_rule_<id>` (e.g. `dq_rule_008`) | The rule's full `base_sql` output (all columns), plus `dq_status` (`VALID` / `INVALID`), `dq_rule_id` and `dq_exported_at`. Overwritten on every run. |
+| `export_table_log` | One row per rule from the latest run: table name, total / invalid / valid rows, export time, status, error. |
+
+- `INVALID` means the row meets `failure_condition`. For `failure_sql` rules, it means the row's `record_key` is in the failure query's result. If the condition evaluates to NULL, the row is `VALID`, the same as in the runner.
+- Tables are named by rule ID only, so renaming a rule doesn't create a new table.
+- Column names are cleaned for Delta: anything other than letters, digits and `_` becomes `_`, and duplicate names get `_2`, `_3`, etc.
+- Tables of deactivated rules are left in place and are no longer refreshed. Drop them manually if they're no longer needed.
+- These tables count **rows**. Dashboard counts are distinct records (`record_key`).
